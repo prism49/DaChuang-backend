@@ -1,7 +1,5 @@
-// 文件路径: DaChuang-backend/config/database.js (最终 Postgres 版 + IPv4 修复)
-
 const { Sequelize } = require('sequelize');
-require('dotenv').config(); // 确保 .env 被加载
+require('dotenv').config();
 
 let sequelize;
 
@@ -9,20 +7,29 @@ let sequelize;
 if (process.env.DATABASE_URL) {
   // 生产环境：使用 Supabase 提供的连接字符串
   console.log("Connecting to production database via DATABASE_URL...");
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres',
-    protocol: 'postgres',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false // Supabase 需要这个设置
-      }
-    },
-    
-    // (!!! 这是解决 ENETUNREACH 错误的关键 !!!)
-    family: 4 // 强制 Sequelize/pg 使用 IPv4
-    
-  });
+
+  // (!!! 这是关键修改：手动解析 URL !!!)
+  const dbUrl = new URL(process.env.DATABASE_URL);
+
+  sequelize = new Sequelize(
+    dbUrl.pathname.slice(1), // 数据库名 (e.g., 'postgres')
+    dbUrl.username,          // 用户名 (e.g., 'postgres')
+    dbUrl.password,          // 密码
+    {
+      host: dbUrl.hostname,  // 主机名 (e.g., 'db.xxxx.supabase.co')
+      port: dbUrl.port,      // 端口 (e.g., 5432)
+      dialect: 'postgres',
+      protocol: 'postgres',
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false // Supabase 需要这个设置
+        }
+      },
+      family: 4
+    }
+  );
+  
 } else {
   // 本地开发环境：使用 .env 文件
   console.log("Connecting to local development database...");
