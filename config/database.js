@@ -1,5 +1,3 @@
-// 文件路径: DaChuang-backend/config/database.js (最终 Postgres 版)
-
 const { Sequelize } = require('sequelize');
 require('dotenv').config(); // 确保 .env 被加载
 
@@ -17,19 +15,24 @@ if (process.env.DATABASE_URL) {
         require: true,
         rejectUnauthorized: false // Supabase 需要这个设置
       }
-    }
+    },
+    
+    // (!!! 这是解决 ENETUNREACH 错误的关键 !!!)
+    family: 4 // 强制 Sequelize/pg 使用 IPv4
+    
   });
 } else {
   // 本地开发环境：使用 .env 文件
-  // (如果你也在本地装了 Postgres, 就可以用这些设置)
   console.log("Connecting to local development database...");
   sequelize = new Sequelize(
-    process.env.DB_NAME || 'dachuangDB',    // 数据库名
-    process.env.DB_USER || 'root',          // 用户名
-    process.env.DB_PASS || '你的本地密码',  // 密码
+    process.env.DB_NAME || 'dachuangDB',
+    process.env.DB_USER || 'root',
+    process.env.DB_PASS || '你的本地密码',
     {
       host: process.env.DB_HOST || 'localhost',
-      dialect: 'postgres' // 确保本地也是 postgres
+      dialect: 'postgres'
+      // (本地通常不需要 family: 4, 但加上也无妨)
+      // family: 4
     }
   );
 }
