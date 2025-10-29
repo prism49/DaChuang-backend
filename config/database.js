@@ -1,3 +1,5 @@
+// 文件路径: DaChuang-backend/config/database.js (最终 Postgres 版 + IPv4 修复)
+
 const { Sequelize } = require('sequelize');
 require('dotenv').config(); // 确保 .env 被加载
 
@@ -31,8 +33,7 @@ if (process.env.DATABASE_URL) {
     {
       host: process.env.DB_HOST || 'localhost',
       dialect: 'postgres'
-      // (本地通常不需要 family: 4, 但加上也无妨)
-      // family: 4
+      // family: 4 // 本地通常不需要
     }
   );
 }
